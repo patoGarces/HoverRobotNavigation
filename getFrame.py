@@ -1,6 +1,5 @@
 import cv2
 from enum import Enum
-from cv2_enumerate_cameras import enumerate_cameras
 import threading
 
 import queue
@@ -49,24 +48,7 @@ class GetFrame:
 
             self.queueFrames.put((left,right))
 
-    def startStream(self, platform, vid_camera, resolution, fps):
-        cameraIndex = -1
-        contIndex = 0
-
-        cv2Cap = cv2.CAP_MSMF
-        if(platform == LINUX_PLATFORM_NAME):
-            cv2Cap = cv2.CAP_V4L2 
-
-        for camera_info in enumerate_cameras(cv2Cap): # or cv2.CAP_DSHOW
-
-            if( vid_camera.lower() in camera_info.path.lower()):
-                cameraIndex = contIndex
-                break
-            contIndex+=1
-        
-        if( cameraIndex == -1 ):
-            print('GetFrames error camera no encontrada')
-            return False
+    def startStream(self, cameraIndex, resolution, fps):
         
         self.cap = cv2.VideoCapture(cameraIndex)
 

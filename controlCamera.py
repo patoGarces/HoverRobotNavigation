@@ -2,8 +2,10 @@ import subprocess
 from enum import Enum
 import platform
 import traceback
+import cv2
+import pyudev
 
-VID_PS5 = "VID_05A9"
+VID_CAMERA = 'VID_05A9'
 WINDOWS_PLATFORM_NAME = 'Windows'
 LINUX_PLATFORM_NAME = 'Linux'
 
@@ -31,6 +33,42 @@ class ControlCamera():
         elif(platform.system() == LINUX_PLATFORM_NAME):
             return self.__getStatusCameraInLinux()
 
+    def getCameraIndex(self, vid='05a9', pid='058c'):
+        """
+        Busca el índice de cámara OpenCV (/dev/videoX) que tenga el VID/PID especificado.
+        Args:
+            vid (str): Vendor ID en minúscula, ej. "05a9"
+            pid (str): Product ID en minúscula, ej. "0580"
+        Returns:
+            int | None: índice de la cámara si la encuentra, sino None.
+        """
+        context = pyudev.Context()
+
+        for device in context.list_devices(subsystem='video4linux'):
+            if not device.device_node.startswith('/dev/video'):
+                continue
+
+            try:
+                parent = device.find_parent('usb', 'usb_device')
+                vendor = parent.attributes.get('idVendor')
+                product = parent.attributes.get('idProduct')
+
+                if vendor and product:
+                    vendor = vendor.decode().lower()
+                    product = product.decode().lower()
+
+                    if vendor == vid.lower() and product == pid.lower():
+                        
+                        indexCamera = device.sys_number
+                        if indexCamera.isdigit():
+                            return int(indexCamera)
+
+            except Exception as e:
+                print(f'Error accediendo al dispositivo: {e}')
+                continue
+
+        print("No se encontró cámara con ese VID/PID.")
+        return None
 
     def __getStatusCameraInWindows(self):
         try:
