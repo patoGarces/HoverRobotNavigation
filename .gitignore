@@ -1,0 +1,16 @@
+# Carpetas virtualenv
+venv/
+env/
+ENV/
+
+# Archivos temporales de Python
+__pycache__/
+*.py[cod]
+
+# Archivos de configuración del editor
+.vscode/
+
+# Logs
+*.log
+
+
