@@ -1,4 +1,3 @@
-import sys
 import time
 import numpy as np
 import cv2
@@ -6,16 +5,11 @@ import cv2
 import logging
 import queue
 
-import platform
-
 from Utils.utils import CameraStatusUi
 from controlCamera import ControlCamera 
 from controlCamera import StatusCamera
 from getFrame import GetFrame
 from getFrame import Resolutions
-
-WINDOWS_PLATFORM_NAME = 'Windows'
-LINUX_PLATFORM_NAME = 'Linux'
 
 class DepthmapServerHeadless():
 
@@ -25,7 +19,6 @@ class DepthmapServerHeadless():
 
     def __init__(self):
 
-        # self.communicator = Communicator()  # Crear la instancia de Communicator
         self.controlCamera = ControlCamera()
         self.getFrame =  GetFrame()
 
