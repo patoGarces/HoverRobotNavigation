@@ -1,16 +1,22 @@
-# Carpetas virtualenv
-venv/
-env/
-ENV/
+# Ignorar carpetas de build y install generadas por colcon y python
+build/
+install/
+log/
 
-# Archivos temporales de Python
+# Ignorar archivos y carpetas de distribución python (egg-info, pyc, etc)
+*.egg-info/
+*.egg
 __pycache__/
-*.py[cod]
+*.pyc
 
-# Archivos de configuración del editor
-.vscode/
+# Ignorar archivos temporales y cachés del sistema
+*.swp
+*.DS_Store
 
-# Logs
-*.log
+# Ignorar enlaces simbólicos si no quieres trackearlos
+log/latest
+log/latest_build
 
+# Ignorar colcon ignore files si no querés versionarlos
+COLCON_IGNORE
 
