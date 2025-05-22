@@ -1,0 +1,3 @@
+[submodule "src/ros2_ps5_stereo"]
+	path = src/ros2_ps5_stereo
+	url = https://github.com/patoGarces/ros2_ps5_stereo.git

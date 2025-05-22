@@ -5,13 +5,13 @@ import cv2
 import logging
 import queue
 
-from Utils.utils import CameraStatusUi
-from controlCamera import ControlCamera 
-from controlCamera import StatusCamera
-from getFrame import GetFrame
-from getFrame import Resolutions
+from ros2_ps5_stereo.Utils.utils import CameraStatusUi
+from ros2_ps5_stereo.controlCamera import ControlCamera 
+from ros2_ps5_stereo.controlCamera import StatusCamera
+from ros2_ps5_stereo.getFrame import GetFrame
+from ros2_ps5_stereo.getFrame import Resolutions
 
-class DepthmapServerHeadless():
+class CameraPs5Handler():
 
     statusCameraUi = 0
     cameraResolution = Resolutions.RES_640x480
@@ -37,25 +37,14 @@ class DepthmapServerHeadless():
 
             self.statusCameraHardware = self.controlCamera.getCameraStatus()
             if( self.statusCameraHardware == StatusCamera.CAMERA_NOT_CONNECTED):
-                self.setStatusCameraUi(CameraStatusUi.NOT_FOUND)
+                self.__setStatusCameraUi(CameraStatusUi.NOT_FOUND)
             if( self.statusCameraHardware == StatusCamera.CAMERA_CONNECTED_PENDING_FW):
-                self.setStatusCameraUi(CameraStatusUi.WAITING_FW)
+                self.__setStatusCameraUi(CameraStatusUi.WAITING_FW)
 
             time.sleep(1)
 
-
-        self.setStatusCameraUi(CameraStatusUi.CONNECTED)        
-
+        self.__setStatusCameraUi(CameraStatusUi.CONNECTED)        
         self.startVideoStream()
-        self.showFrameProcessed()
-
-    def processFrames(self,frames):
-
-        frameR,frameL = frames
-
-        cv2.imshow('FrameL', frameL)
-        cv2.imshow('FrameR', frameR)
-
 
     def closeEvent(self, event):
         self.video_capture.release()  # Liberar la captura de la cámara al cerrar la aplicación
@@ -86,58 +75,28 @@ class DepthmapServerHeadless():
     def getQueueFrames(self):
         return self.framesQueue
 
-    def setStatusCameraUi(self,status: CameraStatusUi):
+    def __setStatusCameraUi(self,status: CameraStatusUi):
         self.statusCameraUi = status
         print('Status camera: ' + status.value)
 
         if (status == CameraStatusUi.WAITING_FW):
             print("Cargando FW")
-            self.loadFirmware()
+            self.__loadFirmware()
         elif (status == CameraStatusUi.CONNECTED):
             print("Iniciar video")
         elif (status == CameraStatusUi.NOT_FOUND):
             print("Buscando camara")
         elif (status == CameraStatusUi.STREAM_RUNNING):
             print("Stream corriendo")
-    
-    def updateCameraStatus(self):
-        statusCameraHardware = self.controlCamera.getCameraStatus()
-        if( statusCameraHardware == StatusCamera.CAMERA_NOT_CONNECTED ):
-            self.setStatusCameraUi(CameraStatusUi.NOT_FOUND)
-        elif( statusCameraHardware == StatusCamera.CAMERA_CONNECTED_PENDING_FW ):
-            self.setStatusCameraUi(CameraStatusUi.WAITING_FW)
-        elif( statusCameraHardware == StatusCamera.CAMERA_CONNECTED_OK ):
-            self.setStatusCameraUi( CameraStatusUi.CONNECTED)
 
-    def loadFirmware(self):
+    def __loadFirmware(self):
         result = self.controlCamera.loadFirmwareCamera()
         if (result != None):
             if(result == True):
-                self.setStatusCameraUi(CameraStatusUi.CONNECTED)
+                self.__setStatusCameraUi(CameraStatusUi.CONNECTED)
             else:
                 print('result: ' + str(result))
-                self.setStatusCameraUi(CameraStatusUi.ERROR)
-
-    def showFrameProcessed(self): 
-        queueframeProcessed = self.getQueueFrames()
-
-        while True:
-            try:
-                # Obtiene los frames de la cola de visualización
-                frames = queueframeProcessed.get(timeout=1)
-
-                self.processFrames(frames)
-
-                # Salir si se presiona 'q'
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-
-            except queue.Empty:
-                print("No frames received, retrying...")
-                continue
-
-        cv2.destroyAllWindows()
-
+                self.__setStatusCameraUi(CameraStatusUi.ERROR)
 
 if __name__ == "__main__":
 
@@ -149,23 +108,26 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET)
 
     # DepthmapServerHeadless(depthMapProcessor)
-    DepthmapServerHeadless()
-    # queueframeProcessed = depthMapServerHeadless.getQueueFrames()
+    cameraPs5Handler = CameraPs5Handler()
+    queueframeProcessed = cameraPs5Handler.getQueueFrames()
 
-    # while True:
-    #     try:
-    #         # Obtiene los frames de la cola de visualización
-    #         frames = queueframeProcessed.get(timeout=1)
+    while True:
+        try:
+            # Obtiene los frames de la cola de visualización
+            frames = queueframeProcessed.get(timeout=1)
 
-    #         depthMapServerHeadless.updateFrames(frames)
+            frameR,frameL = frames
 
-    #         # Salir si se presiona 'q'
-    #         if cv2.waitKey(1) & 0xFF == ord('q'):
-    #             break
+            cv2.imshow('frameL', frameR)
+            # queueframeProcessed.updateFrames(frames)
 
-    #     except queue.Empty:
-    #         print("No frames received, retrying...")
-    #         continue
+            # Salir si se presiona 'q'
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
-    # cv2.destroyAllWindows()
+        except queue.Empty:
+            print("No frames received, retrying...")
+            continue
+
+    cv2.destroyAllWindows()
 
