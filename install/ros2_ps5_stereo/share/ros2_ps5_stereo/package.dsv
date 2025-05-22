@@ -1,6 +1,0 @@
-source;share/ros2_ps5_stereo/hook/pythonpath.ps1
-source;share/ros2_ps5_stereo/hook/pythonpath.dsv
-source;share/ros2_ps5_stereo/hook/pythonpath.sh
-source;share/ros2_ps5_stereo/hook/ament_prefix_path.ps1
-source;share/ros2_ps5_stereo/hook/ament_prefix_path.dsv
-source;share/ros2_ps5_stereo/hook/ament_prefix_path.sh
