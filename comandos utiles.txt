@@ -1,4 +1,0 @@
-comandos utiles: 
-
-- Guardar todas las dependencias instaladas en el venv: pip freeze > requirements.txt
-- Para instalar esas dependencias en el otro entorno: pip install -r requirements.txt
