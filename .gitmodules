@@ -1,3 +1,6 @@
 [submodule "src/ros2_ps5_stereo"]
 	path = src/ros2_ps5_stereo
 	url = https://github.com/patoGarces/ros2_ps5_stereo.git
+[submodule "src/hoverrobot_description"]
+	path = src/hoverrobot_description
+	url = https://github.com/patoGarces/ros2_hoverrobot_description.git
