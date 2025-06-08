@@ -4,3 +4,6 @@
 [submodule "src/hoverrobot_description"]
 	path = src/hoverrobot_description
 	url = https://github.com/patoGarces/ros2_hoverrobot_description.git
+[submodule "src/hoverrobot_comms"]
+	path = src/hoverrobot_comms
+	url = https://github.com/patoGarces/ros2_hoverrobot_comms.git
