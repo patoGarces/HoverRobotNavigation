@@ -38,5 +38,20 @@ def generate_launch_description():
             name="behavior_server",
             output="screen",
             parameters=[params_file]
+        ),
+        Node(
+            package="nav2_lifecycle_manager",
+            executable="lifecycle_manager",
+            name="lifecycle_manager_local",
+            output="screen",
+            parameters=[{
+                "autostart": True,
+                "node_names": [
+                    "controller_server",
+                    "planner_server",
+                    "bt_navigator",
+                    "behavior_server"
+                ]
+            }]
         )
     ])

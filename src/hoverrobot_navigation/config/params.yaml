@@ -1,18 +1,21 @@
 planner_server:
   ros__parameters:
     expected_planner_frequency: 5.0
+    global_frame: odom # 👈 cambie de map a odom(para navegar sin mapa)
     planner_plugins: ["GridBased"]
     GridBased:
-      plugin: "nav2_navfn_planner/NavfnPlanner"
+      plugin: "nav2_navfn_planner::NavfnPlanner"
       tolerance: 0.5
 
 controller_server:
   ros__parameters:
     use_sim_time: false
     controller_frequency: 10.0
+    global_frame: odom # 👈 cambie de map a odom(para navegar sin mapa)
     controller_plugins: ["FollowPath"]
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
+      debug_trajectory_details: True
       min_vel_x: 0.0
       max_vel_x: 0.3
       min_vel_theta: 0.0
@@ -20,11 +23,68 @@ controller_server:
       acc_lim_x: 2.5
       acc_lim_theta: 3.2
 
+      critics: ["RotateToGoal", "Oscillation", "ObstacleFootprint", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
+
+      # parámetros típicos de algunos critics
+      PathAlign:
+        scale: 32.0
+        forward_point_distance: 0.1
+      GoalAlign:
+        scale: 24.0
+        forward_point_distance: 0.1
+      PathDist:
+        scale: 32.0
+      GoalDist:
+        scale: 24.0
+
 bt_navigator:
   ros__parameters:
     use_sim_time: false
+    global_frame: odom # 👈 cambie de map a odom(para navegar sin mapa)
     default_bt_xml_filename: "navigate_to_pose_w_replanning_and_recovery.xml"
 
 behavior_server:
   ros__parameters:
     use_sim_time: false
+    global_frame: odom # 👈 cambie de map a odom(para navegar sin mapa)
+
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      global_frame: odom      # 👈 cambie de map a odom(para navegar sin mapa)
+      robot_base_frame: base_link
+      update_frequency: 5.0
+      publish_frequency: 2.0
+      width: 3
+      height: 3
+      resolution: 0.05
+      rolling_window: true
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        observation_sources: ""
+
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        enabled: true
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      global_frame: odom      # 👈 cambie de map a odom(para navegar sin mapa)
+      robot_base_frame: base_link
+      update_frequency: 1.0
+      publish_frequency: 1.0
+      width: 10
+      height: 10
+      resolution: 0.05
+
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        observation_sources: ""
+
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        enabled: true
