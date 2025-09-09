@@ -14,15 +14,18 @@ controller_server:
     global_frame: odom # 👈 cambie de map a odom(para navegar sin mapa)
     controller_plugins: ["FollowPath"]
     FollowPath:
-      plugin: "dwb_core::DWBLocalPlanner"
+      # plugin: "dwb_core::DWBLocalPlanner"
+      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController" # Para navegacion sin sensores
+
       debug_trajectory_details: True
-      allow_backwards_motion: false
+      # allow_backwards_motion: false
       min_vel_x: 0.05
       max_vel_x: 0.3
-      min_vel_theta: -1.0
-      max_vel_theta: 1.0
+      min_vel_theta: -1
+      max_vel_theta: 1
       acc_lim_x: 2.5
-      acc_lim_theta: 3.2
+      acc_lim_theta: 2.5
+      max_angular_vel: 1.5 
 
       critics: ["RotateToGoal", "Oscillation", "ObstacleFootprint", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
 

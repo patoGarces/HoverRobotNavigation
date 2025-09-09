@@ -70,10 +70,9 @@ private:
         auto scan = sensor_msgs::msg::LaserScan();
         scan.header = msg->header;
 
-        // scan.header.frame_id = "base_link";
-
         int width = msg->image.width;
         int height = msg->image.height;
+        
         int scan_height;
         double range_min, range_max;
 
