@@ -68,7 +68,9 @@ private:
         }
 
         auto scan = sensor_msgs::msg::LaserScan();
-        scan.header = msg->header;
+        scan.header = msg->header;                  // TODO: cambiar frame_id
+        scan.header.stamp = this->now(); 
+        scan.header.frame_id = "lidar_link";
 
         int width = msg->image.width;
         int height = msg->image.height;
