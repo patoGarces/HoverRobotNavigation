@@ -11,14 +11,6 @@ def generate_launch_description():
         'slam_toolbox.yaml'
     )
 
-    # slam_node_async = Node(
-    #     package='slam_toolbox',
-    #     executable='async_slam_toolbox_node', 
-    #     name='slam_toolbox',
-    #     output='screen',
-    #     parameters=[slam_params_file]
-    # ),
-
     slam_node = LifecycleNode( 
         package='slam_toolbox', 
         executable='async_slam_toolbox_node', 
