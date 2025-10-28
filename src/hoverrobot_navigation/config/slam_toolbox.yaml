@@ -40,7 +40,6 @@ slam_toolbox32:
     # Sim time
     use_sim_time: false
 
-
     publish_period_sec: 1.0
     expected_scan_count: 350
 
