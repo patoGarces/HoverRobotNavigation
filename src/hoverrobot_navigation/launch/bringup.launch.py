@@ -34,6 +34,12 @@ def generate_launch_description():
         'nav2_local.launch.py'
     )
 
+    cartographer_launch = os.path.join(
+        get_package_share_directory('hoverrobot_navigation'),
+        'launch',
+        'cartographer.launch.py'
+    )
+
     # === Lifecycle Nodes ===
     comms_node = LifecycleNode(
         package='ros2_hoverrobot_comms',
@@ -65,6 +71,10 @@ def generate_launch_description():
 
     nav2_launch_inc = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(nav2_local_launch)
+    )
+
+    cartographer_launch_inc = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(cartographer_launch)
     )
 
     # === Activación Lifecycle Nodes ===
@@ -121,7 +131,8 @@ def generate_launch_description():
         description,
         comms_node,
         lifecycle_manager_comms,
-        slam_node,
+        # slam_node,
         nav2_launch_inc,
-        lifecycle_manager_slam
+        # lifecycle_manager_slam
+        # cartographer_launch_inc
     ])
