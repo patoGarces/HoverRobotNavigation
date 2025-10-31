@@ -134,5 +134,5 @@ def generate_launch_description():
         # slam_node,
         nav2_launch_inc,
         # lifecycle_manager_slam
-        # cartographer_launch_inc
+        cartographer_launch_inc
     ])
