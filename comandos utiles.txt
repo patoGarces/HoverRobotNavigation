@@ -1,0 +1,104 @@
+- Guardar todas las dependencias instaladas en el venv: pip freeze > requirements.txt
+- Para instalar esas dependencias en el otro entorno: pip install -r requirements.txt
+
+
+calibracion:
+
+- sudo apt install ros-jazzy-image-tools
+
+Alias para los topicos generados por mi nodo:
+
+- ros2 run topic_tools relay /camera_left/image_raw /left/image_raw
+- 
+
+ros2 run camera_calibration cameracalibrator \
+  --size 7x6 \
+  --square 0.025 \
+  --approximate 0.1 \
+  left:=/left/image_raw \
+  right:=/right/image_raw \
+  left_camera:=/left/camera_info \
+  right_camera:=/right/camera_info
+
+Para iniciar el nodo de camara: 
+
+- ros2 launch ros2_ps5_stereo ros2_ps5_stereo_launch.py
+
+Para iniciar el nodo de description: 
+
+- ros2 launch hoverrobot_description display.launch.py
+
+Para iniciar el nodo de comunicacion de hoverrobot
+	- ros2 run ros2_hoverrobot_comms hoverrobot_comms_node
+	
+	- Para controlar lifecycle: 
+		- ros2 lifecycle set /hoverrobot_comms_node configure
+		- ros2 lifecycle set /hoverrobot_comms_node activate
+		
+	A veces es necesario hacer un: ros2 daemon stop
+
+
+Para iniciar nav2:
+- ros2 launch nav2_bringup slam_launch.py use_sim_time:=false
+
+Para lanzar TODOs los nodos:
+- ros2 launch hoverrobot_navigation bringup.launch.py
+
+Para controlar manualmente el robot:
+ - ros2 run teleop_twist_keyboard teleop_twist_keyboard
+
+Para generar el mapa de disparidad:
+- ros2 run stereo_image_proc disparity_node
+
+	con argumentos: 
+		ros2 run stereo_image_proc disparity_node --ros-args \
+		  -r left/image_rect:=/left/image_rect \
+		  -r right/image_rect:=/right/image_rect \
+		  -r left/camera_info:=/left/camera_info \
+		  -r right/camera_info:=/right/camera_info \
+		  -p min_disparity:=0 \
+		  -p max_disparity:=64 \
+		  -p block_size:=15 \
+		  -p uniqueness_ratio:=5.0
+
+Para ver mapa de disparidad:
+- ros2 run image_view disparity_view image:=/disparity
+
+Para ver variables de topicos egraficados:
+- ros2 run rqt_plot rqt_plot
+
+Para correr el configure rqt:
+- ros2 run rqt_reconfigure rqt_reconfigure
+
+
+Convertir el mapa de disparidad en pointcloud:
+- ros2 run stereo_image_proc point_cloud_node
+
+
+setear fixed frame:
+- ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 map frame_left
+
+relacionar frames del odometro con el pointcloud:
+ - ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 odom frame_left
+ 
+ 
+ Para ver el grafico de nodos y topics en tiempo real: rqt_graph
+ 
+ 
+ Setear ecml para obtener la relacion odom -> base link
+- ros2 run nav2_amcl amcl --ros-args -p use_sim_time:=false -p map_topic:=/map -p odom_frame_id:=odom -p base_frame_id:=base_link
+
+- ros2 lifecycle set /amcl configure
+
+
+Ver los tfs actuales:
+- ros2 run tf2_tools view_frames
+
+
+ros2 launch slam_toolbox online_async_launch.py --ros-args -p odom_topic:=/odom
+
+
+Ver temperatura raspi: 
+- sudo vcgencmd measure_temp
+
+
