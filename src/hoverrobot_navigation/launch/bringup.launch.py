@@ -13,7 +13,9 @@ def generate_launch_description():
     # === Paths ===
     slam_params_file = os.path.join(
         get_package_share_directory('hoverrobot_navigation'),
-        'config', 'slam_toolbox.yaml'
+        'config', 
+        #'slam_toolbox.yaml',
+        'mapper_params_online_async.yaml'
     )
 
     ps5_cam_launch = os.path.join(

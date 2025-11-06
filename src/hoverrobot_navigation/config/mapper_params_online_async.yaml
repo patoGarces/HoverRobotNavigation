@@ -14,8 +14,12 @@ slam_toolbox:
     map_frame: map
     base_frame: base_link
     scan_topic: /scan
+    odom_topic: /odom
     use_map_saver: true
     mode: mapping #localization
+
+    publish_map : true
+    using_sim_map: false
 
     # if you'd like to immediately start continuing a map at a given pose
     # or at the dock, but they are mutually exclusive, if pose is given
