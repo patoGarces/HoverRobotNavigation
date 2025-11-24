@@ -45,7 +45,7 @@ def generate_launch_description():
     slam_node = LifecycleNode(
         package='slam_toolbox',
         executable='async_slam_toolbox_node',
-        name='slam_toolbox2',
+        name='slam_toolbox',
         output='screen',
         namespace='',
         parameters=[slam_params_file],
@@ -74,7 +74,7 @@ def generate_launch_description():
         parameters=[{
             'use_sim_time': False,
             'autostart': True,                  # arranca los nodos automáticamente
-            'node_names': ['hoverrobot_comms','slam_toolbox2'], # nodo lifecycle, puede sumar mas nodos
+            'node_names': ['hoverrobot_comms','slam_toolbox'], # nodo lifecycle, puede sumar mas nodos
             'bond_timeout': 0.0,                # opcional, 0.0 desactiva el watchdog,
             'autostart_delay': 3.0,             # tiempo entre reintentos 
             'retry_attempts': -1                # Reintentar infinitamente

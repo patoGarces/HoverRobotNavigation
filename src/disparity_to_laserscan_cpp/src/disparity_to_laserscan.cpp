@@ -61,7 +61,7 @@ private:
         }
     }
 
-    void disparityCallback(const stereo_msgs::msg::DisparityImage::SharedPtr msg) {
+    void disparityCallbackReal(const stereo_msgs::msg::DisparityImage::SharedPtr msg) {
         if (focal_length_ <= 0.0) {
             RCLCPP_WARN(this->get_logger(), "Focal length no disponible, saltando disparidad");
             return;
@@ -92,19 +92,70 @@ private:
         // Tomar la fila central (o scan_height)
         int row_start = height / 2;
 
-        const float* disp_data = reinterpret_cast<const float*>(&msg->image.data[0]);
+        // const float* disp_data = reinterpret_cast<const float*>(&msg->image.data[0]);
+
+        // for (int i = 0; i < width; ++i) {
+        //     float disp = disp_data[row_start * width + i];
+        //     if (disp <= 0.0f)
+        //         scan.ranges[i] = std::numeric_limits<float>::infinity();
+        //     else {
+        //         float depth = (focal_length_ * baseline_) / disp;
+        //         scan.ranges[i] = std::min(std::max(depth, (float)range_min), (float)range_max);
+        //     }
+        // }
+
+
+        int step = msg->image.step;
+        const uint8_t* data_ptr = msg->image.data.data();
 
         for (int i = 0; i < width; ++i) {
-            float disp = disp_data[row_start * width + i];
-            if (disp <= 0.0f)
+            const float* disp_px = reinterpret_cast<const float*>(
+                data_ptr + row_start * step + i * sizeof(float)
+            );
+
+            float disp = *disp_px;
+
+            if (disp <= 0.0f || !std::isfinite(disp)) {
                 scan.ranges[i] = std::numeric_limits<float>::infinity();
-            else {
+            } else {
                 float depth = (focal_length_ * baseline_) / disp;
-                scan.ranges[i] = std::min(std::max(depth, (float)range_min), (float)range_max);
+                scan.ranges[i] = std::clamp(depth, (float)range_min, (float)range_max);
             }
         }
+
         scan_pub_->publish(scan);
     }
+
+    void disparityCallback(const stereo_msgs::msg::DisparityImage::SharedPtr msg) {
+        // Ignoramos disparity y generamos un laser 360° PERFECTO
+
+        auto scan = sensor_msgs::msg::LaserScan();
+        scan.header.stamp = this->now();
+        scan.header.frame_id = "lidar_link";   // tu frame real del robot
+
+        // 360° completos
+        scan.angle_min = -M_PI;
+        scan.angle_max =  M_PI;
+        scan.angle_increment = 0.01;
+
+        // rangos válidos
+        scan.range_min = 0.05;
+        scan.range_max = 10.0;
+
+        int N = static_cast<int>((scan.angle_max - scan.angle_min) / scan.angle_increment);
+
+        scan.ranges.resize(N);
+        scan.intensities.resize(N);
+
+        // Círculo perfecto a 2 metros
+        for (int i = 0; i < N; i++) {
+            scan.ranges[i] = 2.0f;
+            scan.intensities[i] = 100.0f;
+        }
+
+        scan_pub_->publish(scan);
+    }
+
 
     rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_left_sub_;
     rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_right_sub_;
