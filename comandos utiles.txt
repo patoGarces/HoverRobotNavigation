@@ -102,3 +102,20 @@ Ver temperatura raspi:
 - sudo vcgencmd measure_temp
 
 
+ver tfs: 
+- ros2 run tf2_tools view_frames
+
+
+
+
+SIMULACION GAZEBO:
+
+primero: source /opt/ros/jazzy/setup.bash
+
+-	ros2 launch turtlebot4_gz_bringup sim.launch.py
+-	ros2 launch turtlebot4_gz_bringup ros_gz_bridge.launch.py
+-	ros2 launch turtlebot4_gz_bringup turtlebot4_nodes.launch.py
+-	ros2 launch turtlebot4_gz_bringup turtlebot4_spawn.launch.py
+
+
+

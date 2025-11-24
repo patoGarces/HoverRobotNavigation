@@ -180,8 +180,10 @@ global_costmap:
       width: 10
       height: 10
       resolution: 0.05
-      rolling_window: false
+      rolling_window: true
       always_send_full_costmap: true
+
+
 
       robot_radius: 0.15
       # Opción poligonal (si querés más precisión):

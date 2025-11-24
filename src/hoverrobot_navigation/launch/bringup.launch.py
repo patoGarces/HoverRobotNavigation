@@ -1,11 +1,7 @@
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, TimerAction
-from launch.actions import EmitEvent, RegisterEventHandler
+from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.event_handlers import OnStateTransition
 from launch_ros.actions import LifecycleNode, Node
-from launch_ros.events.lifecycle import ChangeState
-from lifecycle_msgs.msg import Transition
 from ament_index_python.packages import get_package_share_directory
 import os
 
@@ -14,7 +10,7 @@ def generate_launch_description():
     slam_params_file = os.path.join(
         get_package_share_directory('hoverrobot_navigation'),
         'config', 
-        #'slam_toolbox.yaml',
+        # 'slam_toolbox.yaml',
         'mapper_params_online_async.yaml'
     )
 
@@ -49,11 +45,11 @@ def generate_launch_description():
     slam_node = LifecycleNode(
         package='slam_toolbox',
         executable='async_slam_toolbox_node',
-        name='slam_toolbox',
+        name='slam_toolbox2',
         output='screen',
         namespace='',
         parameters=[slam_params_file],
-        arguments=['--ros-args', '--log-level', 'warn']
+        arguments=['--ros-args', '--log-level', 'warn'],
     )
 
     # === Include Launch Descriptions ===
@@ -78,43 +74,42 @@ def generate_launch_description():
         parameters=[{
             'use_sim_time': False,
             'autostart': True,                  # arranca los nodos automáticamente
-            'node_names': ['hoverrobot_comms'], # nodo lifecycle, puede sumar mas nodos
+            'node_names': ['hoverrobot_comms','slam_toolbox2'], # nodo lifecycle, puede sumar mas nodos
             'bond_timeout': 0.0,                # opcional, 0.0 desactiva el watchdog,
             'autostart_delay': 3.0,             # tiempo entre reintentos 
             'retry_attempts': -1                # Reintentar infinitamente
         }]
     )
 
-    lifecycle_manager_slam = LifecycleNode(
-        package='nav2_lifecycle_manager',
-        executable='lifecycle_manager',
-        name='lifecycle_manager_slam',
-        namespace='', 
-        output='screen',
-        parameters=[{
-            'autostart': True,
-            'bond_timeout': 20.0,
-            'node_names': ['slam_toolbox']
-        }]
-    )
+    # lifecycle_manager_slam = Node(
+    #     package='nav2_lifecycle_manager',
+    #     executable='lifecycle_manager',
+    #     name='lifecycle_manager_hoverrobot',
+    #     output='screen',
+    #     parameters=[{
+    #         'use_sim_time': False,
+    #         'autostart': True,                  # arranca los nodos automáticamente
+    #         'node_names': ['slam_toolbox2'], # nodo lifecycle, puede sumar mas nodos
+    #         'bond_timeout': 0.0,                # opcional, 0.0 desactiva el watchdog,
+    #         'autostart_delay': 10.0,             # tiempo entre reintentos 
+    #         'retry_attempts': -1                # Reintentar infinitamente
+    #     }]
+    # )
 
-    # Configurar y activar SLAM tras 2 segundos (asegura que comms esté activo)
-    # activate_slam = TimerAction(
-    #     period=2.0,
-    #     actions=[
-    #         EmitEvent(
-    #             event=ChangeState(
-    #                 lifecycle_node_matcher=lambda node: node.name == 'slam_toolbox',
-    #                 transition_id=Transition.TRANSITION_CONFIGURE
-    #             )
-    #         ),
-    #         EmitEvent(
-    #             event=ChangeState(
-    #                 lifecycle_node_matcher=lambda node: node.name == 'slam_toolbox',
-    #                 transition_id=Transition.TRANSITION_ACTIVATE
-    #             )
-    #         )
-    #     ]
+    # lifecycle_manager_slam = LifecycleNode(
+    #     package='nav2_lifecycle_manager',
+    #     executable='lifecycle_manager',
+    #     name='lifecycle_manager_slam',
+    #     namespace='', 
+    #     output='screen',
+    #     parameters=[{
+    #         'use_sim_time': False,
+    #         'autostart': True,
+    #         # 'node_names': ['slam_toolbox','hoverrobot_comms'],
+    #         'node_names': ['hoverrobot_comms'],
+    #         'autostart_delay': 3.0,             # tiempo entre reintentos 
+    #         'retry_attempts': -1                # Reintentar infinitamente
+    #     }]
     # )
 
     # === LaunchDescription final ===
@@ -124,6 +119,6 @@ def generate_launch_description():
         comms_node,
         lifecycle_manager_comms,
         slam_node,
-        nav2_launch_inc,
-        lifecycle_manager_slam
+        # lifecycle_manager_slam,
+        nav2_launch_inc
     ])
