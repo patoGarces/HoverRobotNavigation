@@ -119,3 +119,14 @@ primero: source /opt/ros/jazzy/setup.bash
 
 
 
+
+
+Parametros cargados efectivametne en cada nodo: 
+- ros2 param list /slam_toolbox
+
+Parametro especifico:
+- ros2 param get /slam_toolbox base_frame
+
+
+
+

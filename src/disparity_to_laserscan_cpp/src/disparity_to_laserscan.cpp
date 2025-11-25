@@ -31,6 +31,9 @@ public:
         this->declare_parameter<int>("scan_height", 1);
         this->declare_parameter<double>("range_min", 0.1);
         this->declare_parameter<double>("range_max", 5.0);
+
+        this->declare_parameter("camera_fov_horizontal", 1.0472);  // ~60° en radianes
+        this->declare_parameter("num_laser_points", 720);          // Cantidad de puntos del "lidar"
     }
 
 private:
@@ -61,98 +64,80 @@ private:
         }
     }
 
-    void disparityCallbackReal(const stereo_msgs::msg::DisparityImage::SharedPtr msg) {
+    void disparityCallback(const stereo_msgs::msg::DisparityImage::SharedPtr msg) {
         if (focal_length_ <= 0.0) {
             RCLCPP_WARN(this->get_logger(), "Focal length no disponible, saltando disparidad");
             return;
         }
-
+        
         auto scan = sensor_msgs::msg::LaserScan();
-        scan.header = msg->header;                  // TODO: cambiar frame_id
+        scan.header = msg->header;
         scan.header.stamp = this->now(); 
         scan.header.frame_id = "lidar_link";
-
+        
         int width = msg->image.width;
         int height = msg->image.height;
-        
         int scan_height;
         double range_min, range_max;
-
+        double camera_fov_horizontal;  // FOV horizontal de la cámara en radianes
+        int num_laser_points = 360;    // Cantidad fija de puntos (ajustable)
+        
         this->get_parameter("scan_height", scan_height);
         this->get_parameter("range_min", range_min);
         this->get_parameter("range_max", range_max);
-
-        scan.ranges.resize(width);
-        scan.angle_min = -0.5;  // ejemplo ±0.5 rad
-        scan.angle_max = 0.5;
-        scan.angle_increment = (scan.angle_max - scan.angle_min) / width;
+        this->get_parameter("camera_fov_horizontal", camera_fov_horizontal); // e.g., 1.0472 rad = 60°
+        
+        // Configurar LaserScan de 360 grados
+        scan.angle_min = -M_PI;  // -180 grados
+        scan.angle_max = M_PI;   // +180 grados
+        scan.angle_increment = (2.0 * M_PI) / num_laser_points;
         scan.range_min = range_min;
         scan.range_max = range_max;
-
-        // Tomar la fila central (o scan_height)
+        scan.ranges.resize(num_laser_points, std::numeric_limits<float>::infinity());
+        
+        // Calcular qué índices del LaserScan corresponden al FOV de la cámara
+        // Asumiendo que la cámara apunta hacia adelante (ángulo 0)
+        double camera_angle_center = 0.0;  // Ajustar si la cámara está rotada
+        double camera_angle_min = camera_angle_center - (camera_fov_horizontal / 2.0);
+        double camera_angle_max = camera_angle_center + (camera_fov_horizontal / 2.0);
+        
+        // Normalizar ángulos al rango [-PI, PI]
+        auto normalize_angle = [](double angle) {
+            while (angle > M_PI) angle -= 2.0 * M_PI;
+            while (angle < -M_PI) angle += 2.0 * M_PI;
+            return angle;
+        };
+        
+        camera_angle_min = normalize_angle(camera_angle_min);
+        camera_angle_max = normalize_angle(camera_angle_max);
+        
+        // Procesar datos de disparidad
         int row_start = height / 2;
-
-        // const float* disp_data = reinterpret_cast<const float*>(&msg->image.data[0]);
-
-        // for (int i = 0; i < width; ++i) {
-        //     float disp = disp_data[row_start * width + i];
-        //     if (disp <= 0.0f)
-        //         scan.ranges[i] = std::numeric_limits<float>::infinity();
-        //     else {
-        //         float depth = (focal_length_ * baseline_) / disp;
-        //         scan.ranges[i] = std::min(std::max(depth, (float)range_min), (float)range_max);
-        //     }
-        // }
-
-
-        int step = msg->image.step;
-        const uint8_t* data_ptr = msg->image.data.data();
-
-        for (int i = 0; i < width; ++i) {
-            const float* disp_px = reinterpret_cast<const float*>(
-                data_ptr + row_start * step + i * sizeof(float)
+        const float* disp_data = reinterpret_cast<const float*>(&msg->image.data[0]);
+        
+        // Mapear cada píxel de la imagen al LaserScan
+        for (int img_col = 0; img_col < width; ++img_col) {
+            // Calcular el ángulo correspondiente a este píxel en la imagen
+            double pixel_angle_in_fov = ((double)img_col / width - 0.5) * camera_fov_horizontal;
+            double pixel_angle_global = normalize_angle(camera_angle_center + pixel_angle_in_fov);
+            
+            // Encontrar el índice correspondiente en el LaserScan
+            int laser_index = static_cast<int>(
+                (pixel_angle_global - scan.angle_min) / scan.angle_increment
             );
-
-            float disp = *disp_px;
-
-            if (disp <= 0.0f || !std::isfinite(disp)) {
-                scan.ranges[i] = std::numeric_limits<float>::infinity();
-            } else {
-                float depth = (focal_length_ * baseline_) / disp;
-                scan.ranges[i] = std::clamp(depth, (float)range_min, (float)range_max);
+            
+            // Asegurar que el índice esté dentro del rango
+            if (laser_index >= 0 && laser_index < num_laser_points) {
+                float disp = disp_data[row_start * width + img_col];
+                
+                if (disp > 0.0f) {
+                    float depth = (focal_length_ * baseline_) / disp;
+                    scan.ranges[laser_index] = std::min(std::max(depth, (float)range_min), (float)range_max);
+                }
+                // Si disp <= 0, ya está inicializado como inf
             }
         }
-
-        scan_pub_->publish(scan);
-    }
-
-    void disparityCallback(const stereo_msgs::msg::DisparityImage::SharedPtr msg) {
-        // Ignoramos disparity y generamos un laser 360° PERFECTO
-
-        auto scan = sensor_msgs::msg::LaserScan();
-        scan.header.stamp = this->now();
-        scan.header.frame_id = "lidar_link";   // tu frame real del robot
-
-        // 360° completos
-        scan.angle_min = -M_PI;
-        scan.angle_max =  M_PI;
-        scan.angle_increment = 0.01;
-
-        // rangos válidos
-        scan.range_min = 0.05;
-        scan.range_max = 10.0;
-
-        int N = static_cast<int>((scan.angle_max - scan.angle_min) / scan.angle_increment);
-
-        scan.ranges.resize(N);
-        scan.intensities.resize(N);
-
-        // Círculo perfecto a 2 metros
-        for (int i = 0; i < N; i++) {
-            scan.ranges[i] = 2.0f;
-            scan.intensities[i] = 100.0f;
-        }
-
+        
         scan_pub_->publish(scan);
     }
 
