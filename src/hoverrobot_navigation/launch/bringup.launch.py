@@ -32,6 +32,12 @@ def generate_launch_description():
         'nav2_local.launch.py'
     )
 
+    cartographer_launch = os.path.join(
+        get_package_share_directory('hoverrobot_navigation'),
+        'launch',
+        'cartographer.launch.py'
+    )
+
     # === Lifecycle Nodes ===
     comms_node = LifecycleNode(
         package='ros2_hoverrobot_comms',
@@ -65,6 +71,10 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(nav2_local_launch)
     )
 
+    cartographer_launch_inc = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(cartographer_launch)
+    )
+
     # === Activación Lifecycle Nodes ===
     lifecycle_manager_comms = Node(
         package='nav2_lifecycle_manager',
@@ -74,27 +84,27 @@ def generate_launch_description():
         parameters=[{
             'use_sim_time': False,
             'autostart': True,                  # arranca los nodos automáticamente
-            'node_names': ['hoverrobot_comms','slam_toolbox'], # nodo lifecycle, puede sumar mas nodos
+            'node_names': ['hoverrobot_comms'], # nodo lifecycle, puede sumar mas nodos
             'bond_timeout': 0.0,                # opcional, 0.0 desactiva el watchdog,
             'autostart_delay': 3.0,             # tiempo entre reintentos 
             'retry_attempts': -1                # Reintentar infinitamente
         }]
     )
 
-    # lifecycle_manager_slam = Node(
-    #     package='nav2_lifecycle_manager',
-    #     executable='lifecycle_manager',
-    #     name='lifecycle_manager_hoverrobot',
-    #     output='screen',
-    #     parameters=[{
-    #         'use_sim_time': False,
-    #         'autostart': True,                  # arranca los nodos automáticamente
-    #         'node_names': ['slam_toolbox2'], # nodo lifecycle, puede sumar mas nodos
-    #         'bond_timeout': 0.0,                # opcional, 0.0 desactiva el watchdog,
-    #         'autostart_delay': 10.0,             # tiempo entre reintentos 
-    #         'retry_attempts': -1                # Reintentar infinitamente
-    #     }]
-    # )
+    lifecycle_manager_slam = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_hoverrobot',
+        output='screen',
+        parameters=[{
+            'use_sim_time': False,
+            'autostart': True,                  # arranca los nodos automáticamente
+            'node_names': ['slam_toolbox'], # nodo lifecycle, puede sumar mas nodos
+            'bond_timeout': 0.0,                # opcional, 0.0 desactiva el watchdog,
+            'autostart_delay': 10.0,             # tiempo entre reintentos 
+            'retry_attempts': -1                # Reintentar infinitamente
+        }]
+    )
 
     # lifecycle_manager_slam = LifecycleNode(
     #     package='nav2_lifecycle_manager',
@@ -119,6 +129,7 @@ def generate_launch_description():
         comms_node,
         lifecycle_manager_comms,
         slam_node,
-        # lifecycle_manager_slam,
-        nav2_launch_inc
+        lifecycle_manager_slam,
+        nav2_launch_inc,
+        # cartographer_launch_inc
     ])

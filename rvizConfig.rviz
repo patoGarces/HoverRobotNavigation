@@ -103,6 +103,9 @@ Visualization Manager:
         lidar_link:
           Value: true
         map:
+        lidar_link:
+          Value: true
+        map:
           Value: true
         odom:
           Value: true
@@ -111,7 +114,13 @@ Visualization Manager:
         range_front_right:
           Value: true
         range_rear_left:
+        range_front_left:
           Value: true
+        range_front_right:
+          Value: true
+        range_rear_left:
+          Value: true
+        range_rear_right:
         range_rear_right:
           Value: true
       Marker Scale: 1
@@ -120,6 +129,19 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
+        map:
+          odom:
+            base_link:
+              lidar_link:
+                {}
+              range_front_left:
+                {}
+              range_front_right:
+                {}
+              range_rear_left:
+                {}
+              range_rear_right:
+                {}
         map:
           odom:
             base_link:
@@ -339,6 +361,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
+    Fixed Frame: map
     Fixed Frame: map
     Frame Rate: 30
   Name: root
