@@ -31,54 +31,25 @@ controller_server:
       # plugin: "dwb_core::DWBLocalPlanner"
       # # plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController" # Para navegacion sin sensores
 
-      # # debug_trajectory_details: True
-      # # allow_backwards_motion: false
-      # min_vel_x: 0.00
-      # max_vel_x: 0.3
-      # min_vel_y: 0.0
-      # max_vel_y: 0.0
-      # min_vel_theta: -1.0
-      # max_vel_theta: 1.0
-      # acc_lim_x: 2.5
-      # acc_lim_theta: 2.5
-      # max_angular_vel: 1.5 
-
-      # robot_radius: 0.22
-
-      # critics: ["RotateToGoal", "Oscillation", "ObstacleFootprint", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
-      # # critics: ["GoalAlign", "PathAlign"]
-      # # parámetros típicos de algunos critics
-      # PathAlign:
-      #   scale: 32.0
-      #   forward_point_distance: 0.1
-      # GoalAlign:
-      #   scale: 24.0
-      #   forward_point_distance: 0.1
-      # PathDist:
-      #   scale: 32.0
-      # GoalDist:
-      #   scale: 24.0
-
-
       debug_trajectory_details: True
       min_vel_x: 0.0
       min_vel_y: 0.0
       max_vel_x: 0.26
       max_vel_y: 0.0
-      max_vel_theta: 1.0
+      max_vel_theta: 0.8
       min_speed_xy: 0.0
       max_speed_xy: 0.26
       min_speed_theta: 0.0
       acc_lim_x: 2.5
       acc_lim_y: 0.0
-      acc_lim_theta: 3.2
+      acc_lim_theta: 1.5
       decel_lim_x: -2.5
       decel_lim_y: 0.0
-      decel_lim_theta: -3.2
+      decel_lim_theta: -1.5
       vx_samples: 20
       vy_samples: 5
-      vtheta_samples: 20
-      sim_time: 1.7
+      vtheta_samples: 12
+      sim_time: 1.0
       linear_granularity: 0.05
       angular_granularity: 0.025
       transform_tolerance: 0.2
@@ -160,10 +131,11 @@ local_costmap:
 
       range_sensor_layer:
         plugin: "nav2_costmap_2d::RangeSensorLayer"
-        topics: ["/collision_sensor_FL", "/collision_sensor_FR"]
-        clear_on_max_reading: false # true
-        no_readings_timeout: 0.0   # tiempo para considerar inactivo si no hay datos
-        mark_threshold: 0.6        # confianza para marcar obstáculo
+        topics: ["/collision_sensor_FL", "/collision_sensor_FR","/collision_sensor_RL","/collision_sensor_RR"]
+        max_range: 0.35               # <-- ignorar lecturas mayores a 35 cm
+        clear_on_max_reading: false   # <-- no despejar si el sensor devuelve el max
+        no_readings_timeout: 0.5      # <-- si no hay lecturas > 0.5s, considerar inactivo
+        mark_threshold: 0.6           # <-- confianza mínima para marcar obstáculo
 
 
 # =========================
@@ -198,8 +170,6 @@ global_costmap:
 
       use_sim_time: false
       static_map: true
-
-      plugins: ["static_layer","obstacle_layer", "inflation_layer"]
 
       plugins: ["static_layer","obstacle_layer", "inflation_layer"]
 
