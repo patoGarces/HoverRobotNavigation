@@ -134,7 +134,7 @@ local_costmap:
         topics: ["/collision_sensor_FL", "/collision_sensor_FR","/collision_sensor_RL","/collision_sensor_RR"]
         max_range: 0.35               # <-- ignorar lecturas mayores a 35 cm
         clear_on_max_reading: false   # <-- no despejar si el sensor devuelve el max
-        no_readings_timeout: 0.5      # <-- si no hay lecturas > 0.5s, considerar inactivo
+        no_readings_timeout: 0.0      # <-- si no hay lecturas > 0.5s, considerar inactivo
         mark_threshold: 0.6           # <-- confianza mínima para marcar obstáculo
 
 

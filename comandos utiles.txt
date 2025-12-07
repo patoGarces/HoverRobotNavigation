@@ -130,3 +130,17 @@ Parametro especifico:
 
 
 
+Ver temperatura raspi: 
+- sudo vcgencmd measure_temp
+
+
+
+ver los udp:
+- sudo nc -kul 514
+
+Para abrir rqt:
+- rqt
+
+
+Ejecutar slam_toolbox por separado:
+ros2 run slam_toolbox async_slam_toolbox_node --ros-args --log-level debug --params-file params.yaml

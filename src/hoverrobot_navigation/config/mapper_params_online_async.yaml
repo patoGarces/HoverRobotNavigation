@@ -39,7 +39,7 @@ slam_toolbox:
 
     # General Parameters
     use_scan_matching: false
-    use_scan_barycenter: true # false
+    use_scan_barycenter: false
     minimum_travel_distance: 0.05 # Distancia en metros
     minimum_travel_heading: 0.1 # angulo en radianes, 0.1rad = 5.72 grados
     scan_buffer_size: 80
