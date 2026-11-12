@@ -6,12 +6,12 @@ planner_server:
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_navfn_planner::NavfnPlanner"
-      tolerance: 0.5
+      tolerance: 0.35
 
 controller_server:
   ros__parameters:
     use_sim_time: false
-    controller_frequency: 10.0
+    controller_frequency: 5.0
     global_frame: map # odom # 👈 cambie de map a odom(para navegar sin mapa)
     robot_base_frame: base_footprint
     progress_checker_plugin: "progress_checker"
@@ -36,7 +36,7 @@ controller_server:
       min_vel_y: 0.0
       max_vel_x: 0.26
       max_vel_y: 0.0
-      max_vel_theta: 0.8
+      max_vel_theta: 0.5
       min_speed_xy: 0.0
       max_speed_xy: 0.26
       min_speed_theta: 0.0
@@ -46,9 +46,9 @@ controller_server:
       decel_lim_x: -2.5
       decel_lim_y: 0.0
       decel_lim_theta: -1.5
-      vx_samples: 20
+      vx_samples: 10
       vy_samples: 5
-      vtheta_samples: 12
+      vtheta_samples: 10
       sim_time: 1.0
       linear_granularity: 0.05
       angular_granularity: 0.025
@@ -115,6 +115,7 @@ local_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
         observation_sources: scan
+        observation_persistence: 1.0
         scan:
           topic: /scan
           sensor_frame: lidar_link
