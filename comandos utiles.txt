@@ -14,7 +14,6 @@ Alias para los topicos generados por mi nodo:
 ros2 run camera_calibration cameracalibrator \
   --size 7x6 \
   --square 0.025 \
-  --approximate 0.1 \
   left:=/left/image_raw \
   right:=/right/image_raw \
   left_camera:=/left/camera_info \

@@ -1,0 +1,8 @@
+Cambiar wifi por ssh:
+
+- nmcli dev wifi list
+- sudo nmcli --ask dev wifi connect "WIFI2658"
+
+Para cambiar a ethernet: 
+- nmcli connection show
+

@@ -10,16 +10,25 @@ from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import PointCloud2
 from concurrent.futures import Future
 
+import time
+import glob
+import os
+import shutil
+import psutil
+from std_msgs.msg import String
+
 
 class HoverRobotWebSocketBridge(Node):
 
     def __init__(self):
         super().__init__('hoverrobot_websocket_bridge')
 
-        self.declare_parameter('topic', '/points2')
+        self.declare_parameter('topic_pointcloud', '/points2')
+        self.declare_parameter('topic_telemetry', '/system/telemetry')
         self.declare_parameter('port', 8765)
 
-        self.topic = self.get_parameter('topic').value
+        self.topicPointcloud = self.get_parameter('topic_pointcloud').value
+        self.topicTelemetry = self.get_parameter('topic_telemetry').value
         self.port = self.get_parameter('port').value
 
         self.loop = None
@@ -28,13 +37,24 @@ class HoverRobotWebSocketBridge(Node):
 
         self.subscription = self.create_subscription(
             PointCloud2,
-            self.topic,
+            self.topicPointcloud,
             self.pointcloud_callback,
             qos_profile_sensor_data
         )
 
+        self.telemetry_publisher = self.create_publisher(
+            String,
+            self.topicTelemetry,
+            10
+        )
+
+        self.telemetry_timer = self.create_timer(
+            0.5,
+            self.publish_telemetry
+        )
+        
         self.get_logger().info(
-            f'WebSocket Bridge initialized. Topic: {self.topic}'
+            f'WebSocket Bridge initialized. Topic pointcloud: {self.topicPointcloud} Topic telemetry: {self.topicTelemetry}'
         )
 
     def pointcloud_callback(self, msg: PointCloud2):
@@ -71,11 +91,88 @@ class HoverRobotWebSocketBridge(Node):
             except asyncio.QueueFull:
                 pass
 
+    def get_cpu_temperature(self):
+        try:
+            with open('/sys/class/thermal/thermal_zone0/temp') as f:
+                return round(int(f.read()) / 1000, 1)
+        except (OSError, ValueError):
+            return None
+
+
+    def get_fan_speeds(self):
+        fans = {}
+
+        for path in glob.glob('/sys/class/hwmon/hwmon*/fan*_input'):
+            try:
+                name = os.path.basename(path).replace('_input', '')
+
+                with open(path) as f:
+                    fans[name] = int(f.read())
+
+            except (OSError, ValueError):
+                pass
+
+        return fans
+
+
+    def publish_telemetry(self):
+        memory = psutil.virtual_memory()
+        disk = shutil.disk_usage('/')
+
+        telemetry = {
+            'type': 'system_telemetry',
+            'cpu': {
+                'usage': psutil.cpu_percent(),
+                'per_core': psutil.cpu_percent(percpu=True),
+                'temp': self.get_cpu_temperature()
+            },
+            'fans': self.get_fan_speeds(),
+            'memory': {
+                'usage': memory.percent,
+                'total_mb': round(memory.total / 1024**2),
+                'available_mb': round(memory.available / 1024**2)
+            },
+            'disk': {
+                'usage': round(disk.used / disk.total * 100, 1),
+                'total_gb': round(disk.total / 1024**3, 1),
+                'free_gb': round(disk.free / 1024**3, 1)
+            },
+            'uptime': round(time.time() - psutil.boot_time())
+        }
+
+        msg = String()
+        msg.data = json.dumps(telemetry)
+
+        self.telemetry_publisher.publish(msg)
+
+        if self.loop and self.connected_clients:
+            self.loop.call_soon_threadsafe(
+                self.broadcast_telemetry,
+                msg.data
+            )
+
+
+    def broadcast_telemetry(self, payload):
+        for client in list(self.connected_clients):
+            asyncio.create_task(
+                self.send_telemetry(client, payload)
+            )
+
+
+    async def send_telemetry(self, client, payload):
+        try:
+            async with client['lock']:
+                await client['websocket'].send(payload)
+
+        except websockets.exceptions.ConnectionClosed:
+            pass
+
     async def client_handler(self, websocket):
 
         client = {
             'websocket': websocket,
-            'queue': asyncio.Queue(maxsize=1)
+            'queue': asyncio.Queue(maxsize=1),
+            'lock': asyncio.Lock()
         }
 
         self.connected_clients.append(client)
@@ -116,14 +213,15 @@ class HoverRobotWebSocketBridge(Node):
                     'data_size': len(msg.data)
                 }
 
-                await websocket.send(
-                    json.dumps(metadata)
-                )
+                async with client['lock']:
 
-                # Second frame: original binary PointCloud2 data.
-                await websocket.send(
-                    bytes(msg.data)
-                )
+                    await websocket.send(
+                        json.dumps(metadata)
+                    )
+
+                    await websocket.send(
+                        bytes(msg.data)
+                    )
 
                 self.get_logger().info(
                     f'Cloud sent: sequence={sequence}, bytes={len(msg.data)}'
